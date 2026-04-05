@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discord Timezone Board</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 860px;
+      margin: 40px auto;
+      padding: 0 18px;
+      line-height: 1.55;
+      color: #111827;
+    }
+    code, pre {
+      background: #f3f4f6;
+      border-radius: 8px;
+    }
+    code { padding: 2px 6px; }
+    pre {
+      padding: 14px;
+      overflow-x: auto;
+    }
+    .card {
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Discord Timezone Board</h1>
+  <div class="card">
+    <p>This site only exists to confirm that your Netlify deploy is live.</p>
+    <p>The actual bot logic lives in <code>netlify/functions/interactions.js</code> and <code>netlify/functions/refresh-board.js</code>.</p>
+  </div>
+
+  <div class="card">
+    <h2>Expected flow</h2>
+    <ol>
+      <li>Set the Netlify environment variables listed in <code>.env.example</code>.</li>
+      <li>Point Discord's Interactions Endpoint URL to <code>https://YOUR-SITE.netlify.app/.netlify/functions/interactions</code>.</li>
+      <li>Run <code>npm run register-commands</code>.</li>
+      <li>In Discord, run <code>/board-init</code> in the target channel.</li>
+    </ol>
+  </div>
+</body>
+</html>

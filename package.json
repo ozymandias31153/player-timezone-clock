@@ -1,0 +1,21 @@
+{
+  "name": "discord-timezone-board-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Discord timezone board using Netlify Functions + Firebase Firestore",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "netlify dev",
+    "register-commands": "node scripts/register-commands.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "firebase-admin": "^13.5.0",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "netlify-cli": "^20.1.1"
+  }
+}
