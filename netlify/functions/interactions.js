@@ -234,8 +234,7 @@ async function handleBoardInit(interaction, existingBoard) {
 
   if (existingBoard?.messageId && existingBoard.channelId === channelId) {
     await redrawBoard(existingBoard, actorId);
-    await pinMessage(channelId, existingBoard.messageId);
-    return interactionMessage("Board already existed in this channel. It has been refreshed and pinned again.");
+    return interactionMessage("Board already existed in this channel. It has been refreshed.");
   }
 
   const board = existingBoard
@@ -248,7 +247,6 @@ async function handleBoardInit(interaction, existingBoard) {
     : buildInitialBoard({ guildId, channelId, createdBy: actorId });
 
   const message = await createMessage(channelId, buildBoardPayload(board));
-  await pinMessage(channelId, message.id);
 
   await saveBoard({
     ...board,
@@ -257,7 +255,7 @@ async function handleBoardInit(interaction, existingBoard) {
     lastUpdatedBy: actorId
   });
 
-  return interactionMessage("Board created and pinned in this channel.");
+  return interactionMessage("Board created in this channel.");
 }
 
 async function handleBoardRefresh(interaction, existingBoard) {
