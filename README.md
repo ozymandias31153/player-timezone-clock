@@ -13,10 +13,14 @@ It is built as a **Discord interactions app** hosted on **Netlify Functions**, w
   - PT
   - CT
   - ET
+  - MT
+  - India
+  - Morocco
   - Auckland
   - France
   - Shanghai
 - Keeps **Bulgaria** available as a disabled future zone that can be added later
+- Uses DST-aware IANA time zones, so regions like PT / CT / ET / MT automatically show the correct seasonal time for the current date
 - Uses your requested display rules:
   - `1:00–11:59 AM -> h:mm AM`
   - `12:00–12:59 AM -> h:mm AM midnight`

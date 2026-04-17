@@ -1,5 +1,6 @@
-// netlify/functions/register-commands.js
-const { upsertGuildCommand, upsertGlobalCommand } = require("../../lib/discord");
+require("dotenv").config();
+
+const { upsertGuildCommand, upsertGlobalCommand } = require("../lib/discord");
 
 const commands = [
   {
@@ -36,46 +37,23 @@ const commands = [
   }
 ];
 
-exports.handler = async (event) => {
-  if (event.httpMethod !== "GET") {
-    return {
-      statusCode: 405,
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ok: false, error: "Method not allowed" })
-    };
-  }
+async function main() {
+  const guildId = process.env.DISCORD_GUILD_ID;
 
-  try {
-    const guildId = process.env.DISCORD_GUILD_ID;
-    const registered = [];
-
-    for (const command of commands) {
-      if (guildId) {
-        await upsertGuildCommand(guildId, command);
-        registered.push({ name: command.name, scope: "guild" });
-      } else {
-        await upsertGlobalCommand(command);
-        registered.push({ name: command.name, scope: "global" });
-      }
+  for (const command of commands) {
+    if (guildId) {
+      await upsertGuildCommand(guildId, command);
+      console.log(`Registered guild command: ${command.name}`);
+    } else {
+      await upsertGlobalCommand(command);
+      console.log(`Registered global command: ${command.name}`);
     }
-
-    return {
-      statusCode: 200,
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        ok: true,
-        message: "Commands registered successfully.",
-        registered
-      })
-    };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        ok: false,
-        error: error.message || "Unknown error"
-      })
-    };
   }
-};
+
+  console.log("Done.");
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
