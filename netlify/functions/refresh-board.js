@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const { buildBoardPayload } = require("../../lib/board");
-const { editMessage } = require("../../lib/discord");
+const { createMessage, editMessage, pinMessage } = require("../../lib/discord");
 const { getBoard, saveBoard } = require("../../lib/store");
 
 exports.handler = async () => {
@@ -13,9 +13,24 @@ exports.handler = async () => {
     }
 
     const now = new Date();
-    await editMessage(board.channelId, board.messageId, buildBoardPayload(board, now));
+    const payload = buildBoardPayload(board, now);
+    let messageId = board.messageId;
+
+    try {
+      await editMessage(board.channelId, board.messageId, payload);
+    } catch (error) {
+      if (!isUnknownMessageError(error)) {
+        throw error;
+      }
+
+      const message = await createMessage(board.channelId, payload);
+      await pinMessage(board.channelId, message.id);
+      messageId = message.id;
+    }
+
     await saveBoard({
       ...board,
+      messageId,
       lastRenderedAt: now.toISOString()
     });
 
@@ -34,4 +49,9 @@ function ok(message) {
     statusCode: 200,
     body: message
   };
+}
+
+function isUnknownMessageError(error) {
+  const text = String(error?.message || error || "");
+  return text.includes("Unknown Message") || text.includes("10008");
 }

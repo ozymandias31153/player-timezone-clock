@@ -233,8 +233,8 @@ async function handleBoardInit(interaction, existingBoard) {
   const channelId = interaction.channel_id;
 
   if (existingBoard?.messageId && existingBoard.channelId === channelId) {
-    await redrawBoard(existingBoard, actorId);
-    await pinMessage(channelId, existingBoard.messageId);
+    const refreshedBoard = await redrawBoard(existingBoard, actorId);
+    await pinMessage(channelId, refreshedBoard.messageId);
     return interactionMessage("Board already existed in this channel. It has been refreshed and pinned again.");
   }
 
@@ -316,16 +316,34 @@ async function redrawBoard(board, actorId) {
 
   const now = new Date().toISOString();
   const payload = buildBoardPayload(board, new Date(now));
-  await editMessage(board.channelId, board.messageId, payload);
+  let messageId = board.messageId;
+
+  try {
+    await editMessage(board.channelId, board.messageId, payload);
+  } catch (error) {
+    if (!isUnknownMessageError(error)) {
+      throw error;
+    }
+
+    const message = await createMessage(board.channelId, payload);
+    await pinMessage(board.channelId, message.id);
+    messageId = message.id;
+  }
 
   const updatedBoard = {
     ...board,
+    messageId,
     lastRenderedAt: now,
     lastUpdatedBy: actorId || null
   };
 
   await saveBoard(updatedBoard);
   return updatedBoard;
+}
+
+function isUnknownMessageError(error) {
+  const text = String(error?.message || error || "");
+  return text.includes('Unknown Message') || text.includes('10008');
 }
 
 function optionValue(interaction, optionName) {
