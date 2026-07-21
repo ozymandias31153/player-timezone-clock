@@ -5,6 +5,7 @@ const {
   buildBoardPayload,
   buildZoneSelect,
   buildUserSelect,
+  buildReorderControls,
   getDisabledCards,
   getEnabledCards,
   getCard,
@@ -128,6 +129,21 @@ async function handleComponent(interaction) {
     ]);
   }
 
+  if (customId === "board:reorder") {
+    const cards = getEnabledCards(board);
+    if (cards.length < 2) {
+      return interactionMessage("Enable at least two zones before reordering.");
+    }
+
+    return interactionMessage("Choose the timezone you want to move.", [
+      buildZoneSelect("board:reorder:select", cards, "Select a timezone to move", 1)
+    ]);
+  }
+
+  if (customId === "board:reorder:done") {
+    return updateInteractionMessage("Reordering finished.");
+  }
+
   if (customId === "board:add-zone:select") {
     const selectedIds = interaction.data?.values || [];
     const updatedBoard = patchBoardCards(board, (cards) => cards.map((card) => (
@@ -146,6 +162,69 @@ async function handleComponent(interaction) {
 
     await redrawBoard(updatedBoard, interaction.user?.id);
     return updateInteractionMessage(`Removed zone(s): ${labelsFor(board, selectedIds).join(", ")}.`);
+  }
+
+  if (customId === "board:reorder:select") {
+    const zoneId = interaction.data?.values?.[0];
+    const cards = getEnabledCards(board);
+    const card = cards.find((current) => current.id === zoneId);
+    if (!card) {
+      return updateInteractionMessage("That timezone is no longer active.");
+    }
+
+    const position = cards.findIndex((current) => current.id === zoneId) + 1;
+    return updateInteractionMessage(
+      `Move **${card.label}**. It is currently position ${position} of ${cards.length}.`,
+      [buildReorderControls(zoneId, cards)]
+    );
+  }
+
+  if (customId.startsWith("board:reorder:move:")) {
+    const parts = customId.split(":");
+    const zoneId = parts[3];
+    const direction = parts[4];
+    const enabledCards = getEnabledCards(board);
+    const currentIndex = enabledCards.findIndex((card) => card.id === zoneId);
+
+    if (currentIndex < 0) {
+      return updateInteractionMessage("That timezone is no longer active.");
+    }
+
+    let targetIndex = currentIndex;
+    if (direction === "top") targetIndex = 0;
+    if (direction === "up") targetIndex = Math.max(0, currentIndex - 1);
+    if (direction === "down") targetIndex = Math.min(enabledCards.length - 1, currentIndex + 1);
+    if (direction === "bottom") targetIndex = enabledCards.length - 1;
+
+    const cardLabel = enabledCards[currentIndex].label;
+    if (targetIndex === currentIndex) {
+      return updateInteractionMessage(
+        `**${cardLabel}** is already in that position.`,
+        [buildReorderControls(zoneId, enabledCards)]
+      );
+    }
+
+    const updatedBoard = patchBoardCards(board, (cards) => {
+      const active = cards.filter((card) => card.enabled);
+      const inactive = cards.filter((card) => !card.enabled);
+      const sourceIndex = active.findIndex((card) => card.id === zoneId);
+      const [movingCard] = active.splice(sourceIndex, 1);
+      active.splice(targetIndex, 0, movingCard);
+
+      return [...active, ...inactive].map((card, index) => ({
+        ...card,
+        order: index + 1
+      }));
+    });
+
+    await redrawBoard(updatedBoard, interaction.user?.id);
+    const updatedCards = getEnabledCards(updatedBoard);
+    const newPosition = updatedCards.findIndex((card) => card.id === zoneId) + 1;
+
+    return updateInteractionMessage(
+      `Moved **${cardLabel}** to position ${newPosition} of ${updatedCards.length}.`,
+      [buildReorderControls(zoneId, updatedCards)]
+    );
   }
 
   if (customId === "board:add-member:zone") {
